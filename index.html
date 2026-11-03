@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daol Mate 4기 예약 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Pretendard', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-indigo-900 text-white shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-5 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <span>🤝</span> Daol Mate 4기 예약 시스템
+                </h1>
+                <p class="text-indigo-200 text-sm mt-1">운영 기간: 2026년 11월 4일 ~ 2027년 1월 31일</p>
+            </div>
+            <button onclick="openApiModal()" class="bg-indigo-800 hover:bg-indigo-700 text-xs px-3 py-2 rounded-lg border border-indigo-700 transition flex items-center gap-1 shadow-sm">
+                ⚙️ API 설정
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto flex">
+            <button onclick="switchTab('calendar')" id="nav-calendar" class="flex-1 py-4 text-center font-semibold text-indigo-600 border-b-2 border-indigo-600 transition">
+                📅 달력 & 예약하기
+            </button>
+            <button onclick="switchTab('status')" id="nav-status" class="flex-1 py-4 text-center font-medium text-slate-500 hover:text-slate-800 transition">
+                📋 전체 예약 현황
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
+
+        <!-- Tab 1: Calendar & Booking -->
+        <section id="tab-calendar" class="space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">운영 안내</h2>
+                    <p class="text-sm text-slate-600 mt-1">
+                        • 만남 횟수: 최소 달에 1번<br>
+                        • 만남 방식: 점심 or 티타임 or 저녁 미팅<br>
+                        • 사원급 직원은 대리 이상 타부서 직원 선택 추천
+                    </p>
+                </div>
+                <button onclick="scrollToBooking()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm transition shadow-sm">
+                    바로 예약하기 ✍️
+                </button>
+            </div>
+
+            <!-- Calendar Months Selection -->
+            <div class="space-y-8">
+                <!-- Nov 2026 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 class="text-md font-bold text-slate-800 mb-4 flex items-center justify-between">
+                        <span>2026년 11월</span>
+                        <span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-medium">11/4 (수) 시작</span>
+                    </h3>
+                    <div class="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-400 mb-2">
+                        <span class="text-red-500">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+                    </div>
+                    <div class="grid grid-cols-7 gap-2 text-sm" id="cal-2026-11"></div>
+                </div>
+
+                <!-- Dec 2026 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 class="text-md font-bold text-slate-800 mb-4">2026년 12월</h3>
+                    <div class="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-400 mb-2">
+                        <span class="text-red-500">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+                    </div>
+                    <div class="grid grid-cols-7 gap-2 text-sm" id="cal-2026-12"></div>
+                </div>
+
+                <!-- Jan 2027 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 class="text-md font-bold text-slate-800 mb-4">2027년 1월</h3>
+                    <div class="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-400 mb-2">
+                        <span class="text-red-500">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+                    </div>
+                    <div class="grid grid-cols-7 gap-2 text-sm" id="cal-2027-1"></div>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div id="booking-form-card" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-lg font-bold text-slate-900 mb-4" id="form-title">새 일정 예약하기</h3>
+                <form id="bookingForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="editId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">신청자 (본인)</label>
+                            <select id="name" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">선택하세요</option>
+                                <option value="박병찬 사원">박병찬 사원</option>
+                                <option value="윤석민 대리">윤석민 대리</option>
+                                <option value="한승균 부장">한승균 부장</option>
+                                <option value="최서윤 사원">최서윤 사원</option>
+                                <option value="박정민 사원">박정민 사원</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">매칭 파트너 (상대방)</label>
+                            <input type="text" id="partner" required placeholder="예: 홍길동 과장" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">날짜 선택</label>
+                            <input type="date" id="date" required min="2026-11-04" max="2027-01-31" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">만남 방식</label>
+                            <select id="time" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="점심 미팅">점심 미팅</option>
+                                <option value="티타임">티타임</option>
+                                <option value="저녁 미팅">저녁 미팅</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">장소 / 상세 메모</label>
+                            <input type="text" id="place" required placeholder="예: 구내식당 / 회사 앞 카페" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-200 transition">취소</button>
+                        <button type="submit" id="submitBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl text-sm font-medium transition shadow-sm">예약 등록하기</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Tab 2: Status & Real-time List -->
+        <section id="tab-status" class="hidden space-y-4">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">실시간 전체 예약 현황</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">모든 직원이 등록한 일정이 실시간으로 공유됩니다.</p>
+                </div>
+                <button onclick="fetchReservations()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-2 rounded-lg font-medium transition">
+                    🔄 새로고침
+                </button>
+            </div>
+            <div id="reservation-list" class="space-y-3">
+                <div class="text-center py-12 text-slate-400 text-sm">데이터를 불러오는 중입니다...</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- API Modal -->
+    <div id="apiModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <h3 class="text-lg font-bold text-slate-900">⚙️ 구글 시트 API 연동 설정</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                구글 앱스 스크립트(Apps Script)에서 배포한 **웹 앱 URL**을 입력해 주세요. 입력된 주소는 이 컴퓨터에 안전하게 저장됩니다.
+            </p>
+            <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeApiModal()" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-200">닫기</button>
+                <button onclick="saveApiUrl()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        let reservations = [];
+        let apiUrl = localStorage.getItem('daol_api_url') || '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCalendars();
+            fetchReservations();
+            setInterval(fetchReservations, 5000); // 5초마다 자동 동기화
+        });
+
+        function switchTab(tab) {
+            document.getElementById('tab-calendar').classList.toggle('hidden', tab !== 'calendar');
+            document.getElementById('tab-status').classList.toggle('hidden', tab !== 'status');
+            document.getElementById('nav-calendar').className = tab === 'calendar' ? 'flex-1 py-4 text-center font-semibold text-indigo-600 border-b-2 border-indigo-600 transition' : 'flex-1 py-4 text-center font-medium text-slate-500 hover:text-slate-800 transition';
+            document.getElementById('nav-status').className = tab === 'status' ? 'flex-1 py-4 text-center font-semibold text-indigo-600 border-b-2 border-indigo-600 transition' : 'flex-1 py-4 text-center font-medium text-slate-500 hover:text-slate-800 transition';
+            if(tab === 'status') fetchReservations();
+        }
+
+        function openApiModal() {
+            document.getElementById('apiUrlInput').value = apiUrl;
+            document.getElementById('apiModal').classList.remove('hidden');
+        }
+
+        function closeApiModal() {
+            document.getElementById('apiModal').classList.add('hidden');
+        }
+
+        function saveApiUrl() {
+            apiUrl = document.getElementById('apiUrlInput').value.trim();
+            localStorage.setItem('daol_api_url', apiUrl);
+            closeApiModal();
+            alert('API 설정이 저장되었습니다.');
+            fetchReservations();
+        }
+
+        async function fetchReservations() {
+            if (!apiUrl) {
+                document.getElementById('reservation-list').innerHTML = `
+                    <div class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-center text-sm space-y-2">
+                        <p class="font-semibold">⚠️ 구글 시트 API 연동이 필요합니다.</p>
+                        <p class="text-xs">우측 상단 <strong>[⚙️ API 설정]</strong> 버튼을 눌러 구글 웹 앱 URL을 입력해 주세요.</p>
+                    </div>`;
+                return;
+            }
+            try {
+                const res = await fetch(apiUrl);
+                const data = await res.json();
+                reservations = data;
+                renderReservationsList();
+                renderCalendars();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function sendToServer(payload) {
+            if (!apiUrl) {
+                alert('API 설정 주소가 없습니다. 우측 상단 [⚙️ API 설정]을 먼저 진행해 주세요.');
+                openApiModal();
+                return false;
+            }
+            try {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                return true;
+            } catch (err) {
+                console.error(err);
+                alert('서버 통신 중 오류가 발생했습니다.');
+                return false;
+            }
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const editId = document.getElementById('editId').value;
+            const payload = {
+                id: editId ? editId : 'res_' + Date.now(),
+                name: document.getElementById('name').value,
+                partner: document.getElementById('partner').value,
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value,
+                place: document.getElementById('place').value,
+                action: editId ? 'update' : 'add'
+            };
+
+            const success = await sendToServer(payload);
+            if (success) {
+                alert(editId ? '예정이 수정되었습니다!' : '예약이 성공적으로 등록되었습니다!');
+                resetForm();
+                fetchReservations();
+            }
+        }
+
+        async function deleteReservation(id) {
+            if (confirm('정말 이 예약을 삭제하시겠습니까?')) {
+                const success = await sendToServer({ id: id, action: 'delete' });
+                if (success) {
+                    fetchReservations();
+                }
+            }
+        }
+
+        function editReservation(id) {
+            const item = reservations.find(r => r.id == id);
+            if (!item) return;
+            document.getElementById('editId').value = item.id;
+            document.getElementById('name').value = item.name;
+            document.getElementById('partner').value = item.partner;
+            document.getElementById('date').value = item.date;
+            document.getElementById('time').value = item.time;
+            document.getElementById('place').value = item.place;
+            document.getElementById('form-title').innerText = '일정 수정하기';
+            document.getElementById('submitBtn').innerText = '수정 완료';
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('bookingForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('form-title').innerText = '새 일정 예약하기';
+            document.getElementById('submitBtn').innerText = '예약 등록하기';
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        function scrollToBooking() {
+            switchTab('calendar');
+            document.getElementById('booking-form-card').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderReservationsList() {
+            const listEl = document.getElementById('reservation-list');
+            if (reservations.length === 0) {
+                listEl.innerHTML = '<div class="bg-white p-8 rounded-2xl text-center text-slate-400 text-sm border border-slate-100">등록된 예약 내역이 없습니다.</div>';
+                return;
+            }
+
+            // 날짜순 정렬
+            const sorted = [...reservations].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            listEl.innerHTML = sorted.map(item => `
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-900">${item.name}</span>
+                            <span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full font-medium">파트너: ${item.partner}</span>
+                        </div>
+                        <div class="text-xs text-slate-500 flex items-center gap-3">
+                            <span>📅 ${item.date}</span>
+                            <span>⏰ ${item.time}</span>
+                            <span>📍 ${item.place}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                        <button onclick="editReservation('${item.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium transition">수정</button>
+                        <button onclick="deleteReservation('${item.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs px-3 py-1.5 rounded-lg font-medium transition">삭제</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCalendars() {
+            buildCalendar('cal-2026-11', 2026, 10);
+            buildCalendar('cal-2026-12', 2026, 11);
+            buildCalendar('cal-2027-1', 2027, 0);
+        }
+
+        function buildCalendar(elementId, year, month) {
+            const container = document.getElementById(elementId);
+            if (!container) return;
+            container.innerHTML = '';
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                container.innerHTML += `<div></div>`;
+            }
+
+            for (let d = 1; d <= lastDate; d++) {
+                const mm = String(month + 1).padStart(2, '0');
+                const dd = String(d).padStart(2, '0');
+                const dateStr = `${year}-${mm}-${dd}`;
+                
+                const dayBookings = reservations.filter(r => r.date === dateStr);
+                const hasBooking = dayBookings.length > 0;
+
+                let bgClass = "hover:bg-slate-100 text-slate-700";
+                if(year === 2026 && month === 10 && d === 4) {
+                    bgClass = "bg-indigo-50 text-indigo-700 font-bold border border-indigo-200";
+                }
+                if(hasBooking) {
+                    bgClass = "bg-indigo-600 text-white font-bold shadow-sm";
+                }
+
+                container.innerHTML += `
+                    <div onclick="selectDate('${dateStr}')" class="aspect-square rounded-xl flex flex-col items-center justify-center text-xs cursor-pointer transition ${bgClass}" title="${dayBookings.map(b=>b.name+'&'+b.partner).join(', ')}">
+                        <span>${d}</span>
+                        ${hasBooking ? '<span class="w-1 h-1 bg-white rounded-full mt-0.5"></span>' : ''}
+                    </div>
+                `;
+            }
+        }
+
+        function selectDate(dateStr) {
+            switchTab('calendar');
+            document.getElementById('date').value = dateStr;
+            document.getElementById('booking-form-card').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
