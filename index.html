@@ -11,7 +11,6 @@
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
-
     <!-- Header -->
     <header class="bg-indigo-900 text-white shadow-md">
         <div class="max-w-4xl mx-auto px-4 py-5 flex justify-between items-center">
@@ -19,14 +18,13 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <span>🤝</span> Daol Mate 4기 예약 시스템
                 </h1>
-                <p class="text-indigo-200 text-sm mt-1">운영 기간: 2026년 11월 4일 ~ 2027년 1월 31일</p>
+                <p class="text-indigo-200 text-sm mt-1">운영 기간: 2026년 11월 9일 ~ 2027년 1월 3일</p>
             </div>
             <button onclick="openApiModal()" class="bg-indigo-800 hover:bg-indigo-700 text-xs px-3 py-2 rounded-lg border border-indigo-700 transition flex items-center gap-1 shadow-sm">
                 ⚙️ API 설정
             </button>
         </div>
     </header>
-
     <!-- Navigation Tabs -->
     <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
         <div class="max-w-4xl mx-auto flex">
@@ -38,10 +36,8 @@
             </button>
         </div>
     </nav>
-
     <!-- Main Container -->
     <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
-
         <!-- Tab 1: Calendar & Booking -->
         <section id="tab-calendar" class="space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -56,7 +52,6 @@
                     바로 예약하기 ✍️
                 </button>
             </div>
-
             <!-- Calendar Months Selection -->
             <div class="space-y-8">
                 <!-- Nov 2026 -->
@@ -70,7 +65,6 @@
                     </div>
                     <div class="grid grid-cols-7 gap-2 text-sm" id="cal-2026-11"></div>
                 </div>
-
                 <!-- Dec 2026 -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <h3 class="text-md font-bold text-slate-800 mb-4">2026년 12월</h3>
@@ -79,7 +73,6 @@
                     </div>
                     <div class="grid grid-cols-7 gap-2 text-sm" id="cal-2026-12"></div>
                 </div>
-
                 <!-- Jan 2027 -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <h3 class="text-md font-bold text-slate-800 mb-4">2027년 1월</h3>
@@ -89,7 +82,6 @@
                     <div class="grid grid-cols-7 gap-2 text-sm" id="cal-2027-1"></div>
                 </div>
             </div>
-
             <!-- Booking Form -->
             <div id="booking-form-card" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <h3 class="text-lg font-bold text-slate-900 mb-4" id="form-title">새 일정 예약하기</h3>
@@ -141,7 +133,6 @@
                 </form>
             </div>
         </section>
-
         <!-- Tab 2: Status & Real-time List -->
         <section id="tab-status" class="hidden space-y-4">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
@@ -157,9 +148,7 @@
                 <div class="text-center py-12 text-slate-400 text-sm">데이터를 불러오는 중입니다...</div>
             </div>
         </section>
-
     </main>
-
     <!-- API Modal -->
     <div id="apiModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
@@ -181,18 +170,15 @@
             </div>
         </div>
     </div>
-
     <!-- JavaScript Logic -->
     <script>
         let reservations = [];
         let apiUrl = localStorage.getItem('daol_api_url') || '';
-
         document.addEventListener('DOMContentLoaded', () => {
             renderCalendars();
             fetchReservations();
             setInterval(fetchReservations, 5000); // 5초마다 자동 동기화
         });
-
         function switchTab(tab) {
             document.getElementById('tab-calendar').classList.toggle('hidden', tab !== 'calendar');
             document.getElementById('tab-status').classList.toggle('hidden', tab !== 'status');
@@ -206,16 +192,13 @@
                     : 'flex-1 py-4 text-center font-medium text-slate-500 hover:text-slate-800 transition';
             if (tab === 'status') fetchReservations();
         }
-
         function openApiModal() {
             document.getElementById('apiUrlInput').value = apiUrl;
             document.getElementById('apiModal').classList.remove('hidden');
         }
-
         function closeApiModal() {
             document.getElementById('apiModal').classList.add('hidden');
         }
-
         function saveApiUrl() {
             apiUrl = document.getElementById('apiUrlInput').value.trim();
             localStorage.setItem('daol_api_url', apiUrl);
@@ -223,7 +206,6 @@
             alert('API 설정이 저장되었습니다.');
             fetchReservations();
         }
-
         async function fetchReservations() {
             if (!apiUrl) {
                 document.getElementById('reservation-list').innerHTML = `
@@ -243,7 +225,6 @@
                 console.error(err);
             }
         }
-
         async function sendToServer(payload) {
             if (!apiUrl) {
                 alert('API 설정 주소가 없습니다. 우측 상단 [⚙️ API 설정]을 먼저 진행해 주세요.');
@@ -262,7 +243,6 @@
                 return false;
             }
         }
-
         async function handleFormSubmit(event) {
             event.preventDefault();
             const editId = document.getElementById('editId').value;
@@ -275,7 +255,6 @@
                 place: document.getElementById('place').value,
                 action: editId ? 'update' : 'add'
             };
-
             const success = await sendToServer(payload);
             if (success) {
                 alert(editId ? '예정이 수정되었습니다!' : '예약이 성공적으로 등록되었습니다!');
@@ -283,7 +262,6 @@
                 fetchReservations();
             }
         }
-
         async function deleteReservation(id) {
             if (confirm('정말 이 예약을 삭제하시겠습니까?')) {
                 const success = await sendToServer({ id: id, action: 'delete' });
@@ -292,7 +270,6 @@
                 }
             }
         }
-
         function editReservation(id) {
             const item = reservations.find((r) => r.id == id);
             if (!item) return;
@@ -307,7 +284,6 @@
             document.getElementById('cancelEditBtn').classList.remove('hidden');
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
-
         function resetForm() {
             document.getElementById('bookingForm').reset();
             document.getElementById('editId').value = '';
@@ -315,12 +291,10 @@
             document.getElementById('submitBtn').innerText = '예약 등록하기';
             document.getElementById('cancelEditBtn').classList.add('hidden');
         }
-
         function scrollToBooking() {
             switchTab('calendar');
             document.getElementById('booking-form-card').scrollIntoView({ behavior: 'smooth' });
         }
-
         function renderReservationsList() {
             const listEl = document.getElementById('reservation-list');
             if (reservations.length === 0) {
@@ -328,10 +302,8 @@
                     '<div class="bg-white p-8 rounded-2xl text-center text-slate-400 text-sm border border-slate-100">등록된 예약 내역이 없습니다.</div>';
                 return;
             }
-
             // 날짜순 정렬
             const sorted = [...reservations].sort((a, b) => new Date(a.date) - new Date(b.date));
-
             listEl.innerHTML = sorted
                 .map(
                     (item) => `
@@ -356,33 +328,26 @@
                 )
                 .join('');
         }
-
         function renderCalendars() {
             buildCalendar('cal-2026-11', 2026, 10);
             buildCalendar('cal-2026-12', 2026, 11);
             buildCalendar('cal-2027-1', 2027, 0);
         }
-
         function buildCalendar(elementId, year, month) {
             const container = document.getElementById(elementId);
             if (!container) return;
             container.innerHTML = '';
-
             const firstDay = new Date(year, month, 1).getDay();
             const lastDate = new Date(year, month + 1, 0).getDate();
-
             for (let i = 0; i < firstDay; i++) {
                 container.innerHTML += `<div></div>`;
             }
-
             for (let d = 1; d <= lastDate; d++) {
                 const mm = String(month + 1).padStart(2, '0');
                 const dd = String(d).padStart(2, '0');
                 const dateStr = `${year}-${mm}-${dd}`;
-
                 const dayBookings = reservations.filter((r) => r.date === dateStr);
                 const hasBooking = dayBookings.length > 0;
-
                 let bgClass = 'hover:bg-slate-100 text-slate-700';
                 if (year === 2026 && month === 10 && d === 9) {
                     bgClass = 'bg-indigo-50 text-indigo-700 font-bold border border-indigo-200';
@@ -390,7 +355,6 @@
                 if (hasBooking) {
                     bgClass = 'bg-indigo-600 text-white font-bold shadow-sm';
                 }
-
                 container.innerHTML += `
                     <div onclick="selectDate('${dateStr}')" class="aspect-square rounded-xl flex flex-col items-center justify-center text-xs cursor-pointer transition ${bgClass}" title="${dayBookings
                     .map((b) => b.name + '&' + b.partner)
@@ -401,7 +365,6 @@
                 `;
             }
         }
-
         function selectDate(dateStr) {
             switchTab('calendar');
             document.getElementById('date').value = dateStr;
