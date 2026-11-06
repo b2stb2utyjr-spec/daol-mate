@@ -155,10 +155,11 @@
         </div>
       </form>
     </div>
+
   </section>
 </main>
 
-<!-- 모달: 예약 상세 및 수정/삭제 -->
+<!-- 예약 상세 팝업 -->
 <div id="editModalOverlay" class="fixed inset-0 bg-black/50 hidden z-50 flex justify-center items-center">
   <div id="editModalContent" class="bg-white rounded-2xl p-6 w-full max-w-md">
     <h3 class="text-lg font-bold mb-4">예약 상세 보기</h3>
@@ -181,7 +182,7 @@
     fetchReservations();
     setInterval(fetchReservations, 5000);
 
-    document.getElementById('modalCancelBtn').onclick = () => closeModal();
+    document.getElementById('modalCancelBtn').onclick = closeModal;
     document.getElementById('modalEditBtn').onclick = () => {
       if(!selectedReservation) return;
       loadReservationToForm(selectedReservation);
@@ -205,18 +206,31 @@
     try {
       const res = await fetch(apiUrl);
       const data = await res.json();
-      reservations = data || [];
+      // 날짜 필드 앞 10자리로 통일처리
+      reservations = (data || []).map(r => ({
+        ...r,
+        date: (typeof r.date === 'string') ? r.date.slice(0,10) : formatDate(new Date(r.date))
+      }));
       renderCalendars();
     } catch (e) {
       console.error(e);
     }
   }
 
+  function formatDate(d) {
+    if (!(d instanceof Date)) d = new Date(d);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+
   async function sendToServer(payload) {
     try {
       await fetch(apiUrl, {
         method: 'POST',
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
       return true;
     } catch (e) {
@@ -268,38 +282,35 @@
     container.innerHTML = '';
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
-    for (let i=0; i<firstDay; i++) {
+    for(let i=0; i<firstDay; i++){
       container.innerHTML += `<div></div>`;
     }
-    for (let d=1; d<=lastDate; d++) {
-      const mm = String(month+1).padStart(2,'0');
+    for(let d=1; d<=lastDate; d++){
+      const mm = String(month +1).padStart(2,'0');
       const dd = String(d).padStart(2,'0');
       const dateStr = `${year}-${mm}-${dd}`;
       const dayBookings = reservations.filter(r => r.date === dateStr);
       let bgClass = 'hover:bg-slate-100 text-slate-700';
-      if (year === 2026 && month === 10 && d === 9) {
-        bgClass = 'bg-indigo-50 text-indigo-700 font-bold border border-indigo-200';
-      }
-      if(dayBookings.length){
-        bgClass = 'bg-indigo-600 text-white font-bold shadow-sm';
-      }
+      if(year===2026 && month===10 && d===9) bgClass = 'bg-indigo-50 text-indigo-700 font-bold border border-indigo-200';
+      if(dayBookings.length) bgClass = 'bg-indigo-600 text-white font-bold shadow-sm';
       container.innerHTML += `
-        <div class="aspect-square rounded-xl flex flex-col items-center justify-center text-xs cursor-pointer transition ${bgClass}">
-          <span>${d}</span>
-          <div class="calendar-day-content">
-            ${dayBookings.map(b =>
-              `<div class="badge" title="예약자: ${b.name}\n만남방식: ${b.time}\n경영기획팀 동행: ${b.withPlanner ? '예' : '아니오'}" onclick="showModal('${b.id}', event)">
-                ${b.name} (${b.time}${b.withPlanner ? ' 🤝' : ''})
-              </div>`).join('')}
-          </div>
+      <div 
+        class="aspect-square rounded-xl flex flex-col items-center justify-center text-xs cursor-pointer transition ${bgClass}" 
+        title="${dayBookings.map(b=>b.name).join(', ')}"
+        >
+        <span>${d}</span>
+        <div class="calendar-day-content">
+          ${dayBookings.map(b => 
+            `<div class="badge" title="예약자: ${b.name}\n만남방식: ${b.time}\n경영기획팀 동행: ${b.withPlanner ? '예' : '아니오'}"
+              onclick="event.stopPropagation(); showModal('${b.id}')">${b.name} (${b.time}${b.withPlanner ? ' 🤝' : ''})</div>`).join('')}
         </div>
+      </div>
       `;
     }
   }
 
-  function showModal(id, evt) {
-    evt.stopPropagation();
-    selectedReservation = reservations.find(r => r.id === id);
+  function showModal(id) {
+    selectedReservation = reservations.find(r=>r.id===id);
     if(!selectedReservation) return;
     const modal = document.getElementById('editModalOverlay');
     const content = document.getElementById('modalDetails');
@@ -312,11 +323,22 @@
     modal.style.display = 'flex';
   }
 
-  function closeModal() {
+  function closeModal(){
     selectedReservation = null;
-    const modal = document.getElementById('editModalOverlay');
-    modal.style.display = 'none';
+    document.getElementById('editModalOverlay').style.display='none';
+  }
+
+  function loadReservationToForm(item){
+    document.getElementById('editId').value = item.id;
+    document.getElementById('name').value = item.name;
+    document.getElementById('date').value = item.date;
+    document.getElementById('time').value = item.time;
+    document.getElementById('withPlanner').checked = !!item.withPlanner;
+    document.getElementById('form-title').innerText = '일정 수정하기';
+    document.getElementById('submitBtn').innerText = '수정 완료';
+    document.getElementById('cancelEditBtn').classList.remove('hidden');
   }
 </script>
+
 </body>
 </html>
