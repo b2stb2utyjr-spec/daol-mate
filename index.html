@@ -122,6 +122,13 @@
                             <input type="text" id="place" required placeholder="예: 구내식당 / 회사 앞 카페" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                         </div>
                     </div>
+                    <!-- 추가된 체크박스 -->
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="withPlanner" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                        <label for="withPlanner" class="text-sm text-slate-700 select-none">
+                            첫 미팅(식사) 시 경영기획팀 담당자가 함께 참석 (선택사항)
+                        </label>
+                    </div>
                     <div class="flex justify-end gap-2 pt-2">
                         <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-200 transition">
                             취소
@@ -149,6 +156,7 @@
             </div>
         </section>
     </main>
+
     <!-- API Modal -->
     <div id="apiModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
@@ -170,15 +178,18 @@
             </div>
         </div>
     </div>
+
     <!-- JavaScript Logic -->
     <script>
         let reservations = [];
         let apiUrl = localStorage.getItem('daol_api_url') || '';
+
         document.addEventListener('DOMContentLoaded', () => {
             renderCalendars();
             fetchReservations();
             setInterval(fetchReservations, 5000); // 5초마다 자동 동기화
         });
+
         function switchTab(tab) {
             document.getElementById('tab-calendar').classList.toggle('hidden', tab !== 'calendar');
             document.getElementById('tab-status').classList.toggle('hidden', tab !== 'status');
@@ -192,13 +203,16 @@
                     : 'flex-1 py-4 text-center font-medium text-slate-500 hover:text-slate-800 transition';
             if (tab === 'status') fetchReservations();
         }
+
         function openApiModal() {
             document.getElementById('apiUrlInput').value = apiUrl;
             document.getElementById('apiModal').classList.remove('hidden');
         }
+
         function closeApiModal() {
             document.getElementById('apiModal').classList.add('hidden');
         }
+
         function saveApiUrl() {
             apiUrl = document.getElementById('apiUrlInput').value.trim();
             localStorage.setItem('daol_api_url', apiUrl);
@@ -206,6 +220,7 @@
             alert('API 설정이 저장되었습니다.');
             fetchReservations();
         }
+
         async function fetchReservations() {
             if (!apiUrl) {
                 document.getElementById('reservation-list').innerHTML = `
@@ -225,6 +240,7 @@
                 console.error(err);
             }
         }
+
         async function sendToServer(payload) {
             if (!apiUrl) {
                 alert('API 설정 주소가 없습니다. 우측 상단 [⚙️ API 설정]을 먼저 진행해 주세요.');
@@ -243,6 +259,7 @@
                 return false;
             }
         }
+
         async function handleFormSubmit(event) {
             event.preventDefault();
             const editId = document.getElementById('editId').value;
@@ -253,6 +270,7 @@
                 date: document.getElementById('date').value,
                 time: document.getElementById('time').value,
                 place: document.getElementById('place').value,
+                withPlanner: document.getElementById('withPlanner').checked,
                 action: editId ? 'update' : 'add'
             };
             const success = await sendToServer(payload);
@@ -262,6 +280,7 @@
                 fetchReservations();
             }
         }
+
         async function deleteReservation(id) {
             if (confirm('정말 이 예약을 삭제하시겠습니까?')) {
                 const success = await sendToServer({ id: id, action: 'delete' });
@@ -270,6 +289,7 @@
                 }
             }
         }
+
         function editReservation(id) {
             const item = reservations.find((r) => r.id == id);
             if (!item) return;
@@ -279,11 +299,13 @@
             document.getElementById('date').value = item.date;
             document.getElementById('time').value = item.time;
             document.getElementById('place').value = item.place;
+            document.getElementById('withPlanner').checked = !!item.withPlanner;
             document.getElementById('form-title').innerText = '일정 수정하기';
             document.getElementById('submitBtn').innerText = '수정 완료';
             document.getElementById('cancelEditBtn').classList.remove('hidden');
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
+
         function resetForm() {
             document.getElementById('bookingForm').reset();
             document.getElementById('editId').value = '';
@@ -291,10 +313,12 @@
             document.getElementById('submitBtn').innerText = '예약 등록하기';
             document.getElementById('cancelEditBtn').classList.add('hidden');
         }
+
         function scrollToBooking() {
             switchTab('calendar');
             document.getElementById('booking-form-card').scrollIntoView({ behavior: 'smooth' });
         }
+
         function renderReservationsList() {
             const listEl = document.getElementById('reservation-list');
             if (reservations.length === 0) {
@@ -312,6 +336,11 @@
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-slate-900">${item.name}</span>
                             <span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full font-medium">파트너: ${item.partner}</span>
+                            ${
+                                item.withPlanner
+                                    ? '<span class="ml-2 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium select-none">🤝 경영기획팀 동행</span>'
+                                    : ''
+                            }
                         </div>
                         <div class="text-xs text-slate-500 flex items-center gap-3">
                             <span>📅 ${item.date}</span>
@@ -328,11 +357,13 @@
                 )
                 .join('');
         }
+
         function renderCalendars() {
             buildCalendar('cal-2026-11', 2026, 10);
             buildCalendar('cal-2026-12', 2026, 11);
             buildCalendar('cal-2027-1', 2027, 0);
         }
+
         function buildCalendar(elementId, year, month) {
             const container = document.getElementById(elementId);
             if (!container) return;
@@ -357,14 +388,15 @@
                 }
                 container.innerHTML += `
                     <div onclick="selectDate('${dateStr}')" class="aspect-square rounded-xl flex flex-col items-center justify-center text-xs cursor-pointer transition ${bgClass}" title="${dayBookings
-                    .map((b) => b.name + '&' + b.partner)
-                    .join(', ')}">
+                        .map((b) => b.name + '&' + b.partner)
+                        .join(', ')}">
                         <span>${d}</span>
                         ${hasBooking ? '<span class="w-1 h-1 bg-white rounded-full mt-0.5"></span>' : ''}
                     </div>
                 `;
             }
         }
+
         function selectDate(dateStr) {
             switchTab('calendar');
             document.getElementById('date').value = dateStr;
